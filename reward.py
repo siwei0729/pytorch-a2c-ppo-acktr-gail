@@ -13,7 +13,7 @@ sys.path.append('a2c_ppo_acktr')
 seed = 1
 log_interval = 10
 env_name = "PongNoFrameskip-v4"
-load_dir = "./trained_models/ppo/"
+load_dir = "./"
 det = True
 
 # We need to use the same statistics for normalization as used in training

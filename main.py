@@ -123,9 +123,9 @@ def main():
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
             reward = -(exp_act - action) * (exp_act - action)
-            # print("action", action)
-            # print("exp_act", exp_act)
-            # print("reward", reward)
+            print("action", action)
+            print("exp_act", exp_act)
+            print("reward", reward)
 
             for info in infos:
                 if 'episode' in info.keys():
