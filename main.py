@@ -101,6 +101,7 @@ def main():
     rollouts.to(device)
 
     episode_rewards = deque(maxlen=10)
+    episode_rewards_expert = deque(maxlen=10)
 
     start = time.time()
     num_updates = int(
@@ -129,6 +130,7 @@ def main():
             obs, reward, done, infos = envs.step(action)
             for i in range(len(reward)):
                 reward[i][0] = 0 if action_exp[i][0] == action[i][0] else -1
+                episode_rewards_expert.append(reward[i][0])
             # reward = -(exp_act - action) * (exp_act - action)
             # print("action", action)
             # print("exp_act", exp_act)
@@ -193,12 +195,12 @@ def main():
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
             end = time.time()
             print(
-                "Updates {}, num timesteps {}, FPS {} \n Last {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}\n"
+                "Updates {}, num timesteps {}, FPS {} \n Last {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f} expert reward {:.1f} \n"
                     .format(j, total_num_steps,
                             int(total_num_steps / (end - start)),
                             len(episode_rewards), np.mean(episode_rewards),
                             np.median(episode_rewards), np.min(episode_rewards),
-                            np.max(episode_rewards), dist_entropy, value_loss,
+                            np.max(episode_rewards),np.mean(episode_rewards_expert), dist_entropy, value_loss,
                             action_loss))
 
         if (args.eval_interval is not None and len(episode_rewards) > 1
