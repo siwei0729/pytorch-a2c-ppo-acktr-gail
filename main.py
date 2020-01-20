@@ -122,7 +122,9 @@ def main():
 
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-            reward = -(exp_act - action) * (exp_act - action)
+            for i in range(len(reward)):
+                reward[i][0] = 0 if exp_act[i][0] == action[i][0] else -1
+            # reward = -(exp_act - action) * (exp_act - action)
             # print("action", action)
             # print("exp_act", exp_act)
             # print("reward", reward)
