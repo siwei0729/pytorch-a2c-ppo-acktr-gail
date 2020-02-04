@@ -18,10 +18,12 @@ from a2c_ppo_acktr.envs import make_vec_envs
 from a2c_ppo_acktr.model import Policy
 from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
-# from reward import expert_forward
 
+# from reward import expert_forward
+from reward import LFTReward
 
 actor_critic_expert, ob_rms = torch.load(os.path.join("./", "PongNoFrameskip-v4.pt"))
+
 
 def main():
     args = get_args()
@@ -96,6 +98,9 @@ def main():
                               envs.observation_space.shape, envs.action_space,
                               actor_critic.recurrent_hidden_state_size)
 
+    # reward agents
+    ltf_reward = LFTReward()
+
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
@@ -117,24 +122,13 @@ def main():
         for step in range(args.num_steps):
             # Sample actions
             with torch.no_grad():
-                value_exp, action_exp, action_log_prob_exp, recurrent_hidden_states_exp = actor_critic_expert.act(
-                    rollouts.obs[step], rollouts.recurrent_hidden_states[step],
-                    rollouts.masks[step])
                 value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
-
-
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-            for i in range(len(reward)):
-                reward[i][0] = 0 if action_exp[i][0] == action[i][0] else -1
-                episode_rewards_expert.append(reward[i][0])
-            # reward = -(exp_act - action) * (exp_act - action)
-            # print("action", action)
-            # print("exp_act", exp_act)
-            # print("reward", reward)
+            print("obs shape:", rollouts.obs[step].shape)
 
             for info in infos:
                 if 'episode' in info.keys():
@@ -200,7 +194,7 @@ def main():
                             int(total_num_steps / (end - start)),
                             len(episode_rewards), np.mean(episode_rewards),
                             np.median(episode_rewards), np.min(episode_rewards),
-                            np.max(episode_rewards),np.mean(episode_rewards_expert), dist_entropy, value_loss,
+                            np.max(episode_rewards), np.mean(episode_rewards_expert), dist_entropy, value_loss,
                             action_loss))
 
         if (args.eval_interval is not None and len(episode_rewards) > 1
