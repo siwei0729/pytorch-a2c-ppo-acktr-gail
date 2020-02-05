@@ -45,12 +45,17 @@ class LFTReward:
         return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
 
     def reward(self, s):
-        gray = self.rgb2gray(s)
-        resized_img = cv2.resize(gray, (256, 256))
-        resized_img = resized_img[:, :, None]
+        # gray = self.rgb2gray(s)
+        # resized_img = cv2.resize(gray, (256, 256))
+
+        resized_img = s.cpu().detach().numpy()
+
+        resized_img = resized_img / 255.0
+        # resized_img = resized_img[:, :, :, None]
         rgb_image = cv2.merge((resized_img, resized_img, resized_img))
-        rgb_image = rgb_image[None, :, :, :]
+        rgb_image = rgb_image.reshape((4, 256, 256, 3))
         img_s = torch.tensor(rgb_image).to(self.device)
+        img_s = img_s.double()
         img_s_z = self.encoder_net(img_s)
 
         reward = self.calc_reward1(img_s_z)
@@ -58,13 +63,15 @@ class LFTReward:
 
     def calc_reward1(self, img_s_z):
         reward_sum = 0
-        reward_list = []
-        for i in range(self.img_g_z.shape[0]):
-            reward = torch.clamp(self.distance(img_s_z, self.img_g_z[i]), max=5).cpu().detach().numpy()
-            reward = np.sum(-i * reward)
-            reward_list.append(reward)
-            reward_sum += reward
+        for frame in range(img_s_z.shape[0]):
+            reward_list = []
+            for i in range(self.img_g_z.shape[0]):
+                reward = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
+                reward = np.sum(-i * reward)
+                reward_list.append(reward)
+                reward_sum += reward
 
+        reward_sum /= img_s_z.shape[0]
         return reward_sum
 
 

@@ -22,7 +22,8 @@ from evaluation import evaluate
 # from reward import expert_forward
 from reward import LFTReward
 
-actor_critic_expert, ob_rms = torch.load(os.path.join("./", "PongNoFrameskip-v4.pt"))
+
+# actor_critic_expert, ob_rms = torch.load(os.path.join("./", "PongNoFrameskip-v4.pt"))
 
 
 def main():
@@ -99,7 +100,7 @@ def main():
                               actor_critic.recurrent_hidden_state_size)
 
     # reward agents
-    ltf_reward = LFTReward()
+    ltf_reward_fun = LFTReward()
 
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
@@ -128,8 +129,11 @@ def main():
 
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-            print("obs shape:", rollouts.obs[step].shape)
+            print("reward:", reward, "Step:", step, "j:", j)
 
+            ltf_reward = ltf_reward_fun.reward(obs)
+            ltf_reward = np.array([[ltf_reward]])
+            ltf_reward = torch.tensor(ltf_reward).to(device)
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])
