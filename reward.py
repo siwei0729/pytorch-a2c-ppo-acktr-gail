@@ -20,7 +20,8 @@ class LFTReward:
         self.encoder_net = Net()
         self.encoder_net = self.encoder_net.to(self.device)
         self.encoder_net.double()
-        self.encoder_net.load_state_dict(torch.load(model_path, map_location={'cuda:0': 'cpu'}))
+        # self.encoder_net.load_state_dict(torch.load(model_path, map_location={'cuda:0': 'cpu'}))
+        self.encoder_net.load_state_dict(torch.load(model_path))
         self.encoder_net.eval()
 
         img_g = self.load_data()
@@ -53,41 +54,23 @@ class LFTReward:
         resized_img = resized_img / 255.0
         # resized_img = resized_img[:, :, :, None]
         rgb_image = cv2.merge((resized_img, resized_img, resized_img))
-        rgb_image = rgb_image.reshape((4, 256, 256, 3))
+        rgb_image = rgb_image.reshape((-1, 84, 84, 3))
         img_s = torch.tensor(rgb_image).to(self.device)
         img_s = img_s.double()
         img_s_z = self.encoder_net(img_s)
 
-        reward = self.calc_reward1(img_s_z)
-        return reward
+        rewards = self.calc_reward1(img_s_z)
+        return rewards
 
     def calc_reward1(self, img_s_z):
-        reward_sum = 0
+
+        reward_list = []
         for frame in range(img_s_z.shape[0]):
-            reward_list = []
+            reward_sum_per_frame = 0
             for i in range(self.img_g_z.shape[0]):
                 reward = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
                 reward = np.sum(-i * reward)
-                reward_list.append(reward)
-                reward_sum += reward
+                reward_sum_per_frame += reward
+            reward_list.append(reward_sum_per_frame)
 
-        reward_sum /= img_s_z.shape[0]
-        return reward_sum
-
-
-def load_validation_data():
-    img_os = []
-    for i in range(1, 10):
-        img_o = cv2.imread(f'validate_images/observation/{i}/{i}.png')
-        img_os.append(img_o / 255.0)
-    return img_os
-
-
-def test():
-    # img_os = load_validation_data()
-    ltf_reward = LFTReward()
-    # for s in img_os:
-    #     reward = ltf_reward.reward(s)
-
-
-test()
+        return reward_list
