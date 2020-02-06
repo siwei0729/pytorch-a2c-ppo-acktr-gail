@@ -20,8 +20,8 @@ class LFTReward:
         self.encoder_net = Net()
         self.encoder_net = self.encoder_net.to(self.device)
         self.encoder_net.double()
-        # self.encoder_net.load_state_dict(torch.load(model_path, map_location={'cuda:0': 'cpu'}))
-        self.encoder_net.load_state_dict(torch.load(model_path))
+        self.encoder_net.load_state_dict(torch.load(model_path, map_location={'cuda:0': 'cpu'}))
+        # self.encoder_net.load_state_dict(torch.load(model_path))
         self.encoder_net.eval()
 
         img_g = self.load_data()
