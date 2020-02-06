@@ -45,7 +45,7 @@ class LFTReward:
     def rgb2gray(rgb):
         return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
 
-    def reward(self, s):
+    def reward(self, s, j):
         # gray = self.rgb2gray(s)
         # resized_img = cv2.resize(gray, (256, 256))
 
@@ -59,10 +59,10 @@ class LFTReward:
         img_s = img_s.double()
         img_s_z = self.encoder_net(img_s)
 
-        rewards = self.calc_reward1(img_s_z)
+        rewards = self.calc_reward1(img_s_z, j)
         return rewards
 
-    def calc_reward1(self, img_s_z):
+    def calc_reward1(self, img_s_z, j):
 
         reward_list = []
         for frame in range(img_s_z.shape[0]):
@@ -73,8 +73,10 @@ class LFTReward:
                 reward = np.sum(reward)
                 distance_list.append(reward)
 
-            reward_list.append(min(distance_list) * -1)
-
+            if j <= 30:
+                reward_list.append(min(distance_list) * -1)
+            else:
+                reward_list.append(distance_list[1] * -1)
         return reward_list
 
     def calc_reward2(self, img_s_z):

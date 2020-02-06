@@ -131,8 +131,7 @@ def main():
             envs.render()
             obs, reward, done, infos = envs.step(action)
 
-
-            ltf_reward = ltf_reward_fun.reward(obs)
+            ltf_reward = ltf_reward_fun.reward(obs, j)
             ltf_reward = np.array(ltf_reward)
             ltf_reward = ltf_reward.reshape((args.num_processes, -1))
             ltf_reward = np.mean(ltf_reward, axis=1)
