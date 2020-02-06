@@ -130,14 +130,15 @@ def main():
             # Obser reward and next obs
             envs.render()
             obs, reward, done, infos = envs.step(action)
-            # print("reward:", reward, "Step:", step, "j:", j)
+
 
             ltf_reward = ltf_reward_fun.reward(obs)
-            ltf_reward = np.array(ltf_reward) / 20.0
+            ltf_reward = np.array(ltf_reward)
             ltf_reward = ltf_reward.reshape((args.num_processes, -1))
             ltf_reward = np.mean(ltf_reward, axis=1)
             ltf_reward = ltf_reward.reshape((args.num_processes, 1))
             ltf_reward = torch.tensor(ltf_reward).to(device)
+            print("reward:", ltf_reward, "Step:", step, "j:", j)
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])

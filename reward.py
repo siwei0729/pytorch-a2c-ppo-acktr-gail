@@ -66,10 +66,26 @@ class LFTReward:
 
         reward_list = []
         for frame in range(img_s_z.shape[0]):
-            reward_sum_per_frame = 0
+
+            distance_list = []
             for i in range(self.img_g_z.shape[0]):
                 reward = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
-                reward = np.sum(-i * reward)
+                reward = np.sum(reward)
+                distance_list.append(reward)
+
+            reward_list.append(min(distance_list) * -1)
+
+        return reward_list
+
+    def calc_reward2(self, img_s_z):
+
+        reward_list = []
+        for frame in range(img_s_z.shape[0]):
+            reward_sum_per_frame = 0
+            for i in range(self.img_g_z.shape[0]):
+                distance = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
+                reward = np.exp(-1 * distance / 10.0)
+                reward = np.sum(reward)
                 reward_sum_per_frame += reward
             reward_list.append(reward_sum_per_frame)
 
