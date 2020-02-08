@@ -4,6 +4,7 @@ import os
 import time
 from collections import deque
 
+import matplotlib.pyplot as plt
 import gym
 import numpy as np
 import torch
@@ -24,6 +25,19 @@ from reward import LFTReward
 
 
 # actor_critic_expert, ob_rms = torch.load(os.path.join("./", "PongNoFrameskip-v4.pt"))
+
+
+def draw_graph():
+    x = np.linspace(0, 30, 30)
+    y = np.sin(x / 6 * np.pi)
+    error = np.random.normal(0.1, 0.02, size=y.shape)
+    y += np.random.normal(0, 0.1, size=y.shape)
+
+    plt.plot(x, y, 'k-')
+    plt.fill_between(x, y - error, y + error)
+    plt.ylabel('Ground Truth Reward')
+    plt.xlabel('Steps')
+    plt.show()
 
 
 def main():
