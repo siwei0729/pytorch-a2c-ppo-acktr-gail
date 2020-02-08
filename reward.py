@@ -50,31 +50,46 @@ class LFTReward:
         # resized_img = cv2.resize(gray, (256, 256))
 
         resized_img = s.cpu().detach().numpy()
-
         resized_img = resized_img / 255.0
+
         # resized_img = resized_img[:, :, :, None]
         rgb_image = cv2.merge((resized_img, resized_img, resized_img))
         rgb_image = rgb_image.reshape((-1, 84, 84, 3))
+        pixel_val = rgb_image[0, 10, 60, 0]
+
+        if pixel_val == 0:
+            goal_wall = True
+        elif abs(pixel_val - 0.75) < 0.01:
+            goal_wall = True
+        else:
+            goal_wall = False
+
         img_s = torch.tensor(rgb_image).to(self.device)
         img_s = img_s.double()
         img_s_z = self.encoder_net(img_s)
 
-        rewards = self.calc_reward1(img_s_z, j)
+        rewards = self.calc_reward1(img_s_z, goal_wall)
         return rewards
 
-    def calc_reward1(self, img_s_z, j):
+    def calc_reward1(self, img_s_z, goal_wall):
 
         reward_list = []
         for frame in range(img_s_z.shape[0]):
 
             distance_list = []
             for i in range(self.img_g_z.shape[0]):
-                reward = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
-                reward = np.sum(reward)
-                reward = reward * 3.8 if i == 0 else reward
-                distance_list.append(reward)
+                distance = torch.clamp(self.distance(img_s_z[frame], self.img_g_z[i]), max=5).cpu().detach().numpy()
+                distance = np.sum(distance)
+                distance_list.append(distance)
 
-            reward_list.append(min(distance_list) * -1)
+            if goal_wall:
+                reward = 0 if distance_list[0] > 2.5 else 5
+            else:
+                reward = 0 if distance_list[1] > 3 else 50
+
+            if reward > 5:
+                reward = reward
+            reward_list.append(reward)
 
         return reward_list
 
