@@ -10,7 +10,7 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(3, 32, 8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 32, 3, stride=1)
-        self.fc1 = nn.Linear(32 * 7 * 7, 64)
+        self.fc1 = nn.Linear(32 * 7 * 7, 32)
 
     def forward(self, x):
         x = x.permute(0, 3, 1, 2).contiguous()  # get into NCHW format

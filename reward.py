@@ -82,13 +82,13 @@ class LFTReward:
                 distance = np.sum(distance)
                 distance_list.append(distance)
 
-            if goal_wall:
-                reward = 0 if distance_list[0] > 2.5 else 5
-            else:
-                reward = 0 if distance_list[1] > 3 else 50
-
-            if reward > 5:
-                reward = reward
+            reward = 0
+            if distance_list[0] < 2.5:
+                reward += 50
+            if distance_list[1] < 3:
+                reward += 50
+            # if distance_list[2] < 3:
+            #     reward -= 2
             reward_list.append(reward)
 
         return reward_list
