@@ -114,7 +114,7 @@ def main():
                               actor_critic.recurrent_hidden_state_size)
 
     # reward agents
-    ltf_reward_fun = LFTReward()
+    # ltf_reward_fun = LFTReward()
 
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
@@ -145,13 +145,13 @@ def main():
             envs.render()
             obs, reward, done, infos = envs.step(action)
 
-            ltf_reward = ltf_reward_fun.reward(obs, j)
-            ltf_reward = np.array(ltf_reward)
-            ltf_reward = ltf_reward.reshape((args.num_processes, -1))
-            ltf_reward = np.mean(ltf_reward, axis=1)
-            ltf_reward = ltf_reward.reshape((args.num_processes, 1))
-            ltf_reward = torch.tensor(ltf_reward).to(device)
-            print("reward:", ltf_reward, "Step:", step, "j:", j)
+            # ltf_reward = ltf_reward_fun.reward(obs, j)
+            # ltf_reward = np.array(ltf_reward)
+            # ltf_reward = ltf_reward.reshape((args.num_processes, -1))
+            # ltf_reward = np.mean(ltf_reward, axis=1)
+            # ltf_reward = ltf_reward.reshape((args.num_processes, 1))
+            # ltf_reward = torch.tensor(ltf_reward).to(device)
+            # print("reward:", ltf_reward, "Step:", step, "j:", j)
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])
@@ -163,7 +163,7 @@ def main():
                 [[0.0] if 'bad_transition' in info.keys() else [1.0]
                  for info in infos])
             rollouts.insert(obs, recurrent_hidden_states, action,
-                            action_log_prob, value, ltf_reward, masks, bad_masks)
+                            action_log_prob, value, reward, masks, bad_masks)
 
         with torch.no_grad():
             next_value = actor_critic.get_value(
