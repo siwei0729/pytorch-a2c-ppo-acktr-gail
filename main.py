@@ -142,7 +142,7 @@ def main():
                     rollouts.masks[step])
 
             # Obser reward and next obs
-            envs.render()
+            # envs.render()
             obs, reward, done, infos = envs.step(action)
 
             # ltf_reward = ltf_reward_fun.reward(obs, j)
