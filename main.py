@@ -62,6 +62,13 @@ def convert_one_hot(num_processes, obs, device):
 def main():
     args = get_args()
 
+    # file_name = os.path.join(
+    #     args.gail_experts_dir, "trajs_{}.pt".format(
+    #         args.env_name.split('-')[0].lower()))
+    #
+    # expert_dataset = gail.ExpertDataset(
+    #     file_name, num_trajectories=4, subsample_frequency=20)
+
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
 
@@ -115,15 +122,15 @@ def main():
 
     if args.gail:
         assert len(envs.observation_space.shape) == 1
-        discr = gail.Discriminator(
-            envs.observation_space.shape[0] + envs.action_space.shape[0], 100,
-            device)
+        # discr = gail.Discriminator(envs.observation_space.shape[0] + envs.action_space.shape[0], 100, device)
+        discr = gail.Discriminator(envs.observation_space.shape[0] + 1, 100, device)
+
         file_name = os.path.join(
             args.gail_experts_dir, "trajs_{}.pt".format(
                 args.env_name.split('-')[0].lower()))
 
         expert_dataset = gail.ExpertDataset(
-            file_name, num_trajectories=4, subsample_frequency=20)
+            file_name, num_trajectories=100, subsample_frequency=20)
         drop_last = len(expert_dataset) > args.gail_batch_size
         gail_train_loader = torch.utils.data.DataLoader(
             dataset=expert_dataset,
@@ -169,6 +176,13 @@ def main():
             obs, reward, done, infos = envs.step(action)
             obs = convert_one_hot(args.num_processes, obs, device)
 
+            # ltf_reward = ltf_reward_fun.reward(obs, j)
+            # ltf_reward = np.array(ltf_reward)
+            # ltf_reward = ltf_reward.reshape((args.num_processes, -1))
+            # ltf_reward = np.mean(ltf_reward, axis=1)
+            # ltf_reward = ltf_reward.reshape((args.num_processes, 1))
+            # ltf_reward = torch.tensor(ltf_reward).to(device)
+            # print("reward:", ltf_reward, "Step:", step, "j:", j)
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])

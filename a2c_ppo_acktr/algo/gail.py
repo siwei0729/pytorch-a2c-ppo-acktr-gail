@@ -66,6 +66,7 @@ class Discriminator(nn.Module):
         for expert_batch, policy_batch in zip(expert_loader,
                                               policy_data_generator):
             policy_state, policy_action = policy_batch[0], policy_batch[2]
+            policy_action = policy_action.float()
             policy_d = self.trunk(
                 torch.cat([policy_state, policy_action], dim=1))
 
@@ -73,6 +74,7 @@ class Discriminator(nn.Module):
             expert_state = obsfilt(expert_state.numpy(), update=False)
             expert_state = torch.FloatTensor(expert_state).to(self.device)
             expert_action = expert_action.to(self.device)
+            expert_action = expert_action.float()
             expert_d = self.trunk(
                 torch.cat([expert_state, expert_action], dim=1))
 
@@ -98,6 +100,7 @@ class Discriminator(nn.Module):
     def predict_reward(self, state, action, gamma, masks, update_rms=True):
         with torch.no_grad():
             self.eval()
+            action = action.float()
             d = self.trunk(torch.cat([state, action], dim=1))
             s = torch.sigmoid(d)
             reward = s.log() - (1 - s).log()
