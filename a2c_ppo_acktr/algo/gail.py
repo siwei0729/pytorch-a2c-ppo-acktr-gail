@@ -8,6 +8,8 @@ from torch import autograd
 
 from baselines.common.running_mean_std import RunningMeanStd
 
+from main import convert_one_hot
+
 
 class Discriminator(nn.Module):
     def __init__(self, input_dim, hidden_dim, device):
@@ -71,8 +73,10 @@ class Discriminator(nn.Module):
                 torch.cat([policy_state, policy_action], dim=1))
 
             expert_state, expert_action = expert_batch
-            expert_state = obsfilt(expert_state.numpy(), update=False)
-            expert_state = torch.FloatTensor(expert_state).to(self.device)
+            expert_state = convert_one_hot(expert_state.size(0), expert_state, self.device)
+            # expert_state = obsfilt(expert_state.numpy(), update=False)
+            # expert_state = torch.FloatTensor(expert_state).to(self.device)
+            expert_state = expert_state.float().to(self.device)
             expert_action = expert_action.to(self.device)
             expert_action = expert_action.float()
             expert_d = self.trunk(
