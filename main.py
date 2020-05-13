@@ -40,6 +40,25 @@ def draw_graph():
     plt.show()
 
 
+def convert_one_hot(num_processes, obs, device):
+    obs_one_hot = []
+
+    conf = [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+            2, 2, 2, 2, 2, 2,
+            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+            19, 19]
+    for p_id in range(num_processes):
+        ob = []
+        for i in range(40):
+            val = int(obs[p_id][i].cpu().item())
+            tmp = np.zeros(conf[i])
+            tmp[val] = 1
+            ob.extend(tmp)
+        obs_one_hot.append(ob)
+    obs = torch.tensor(obs_one_hot).to(device)
+    return obs
+
+
 def main():
     args = get_args()
 
@@ -60,6 +79,9 @@ def main():
 
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
+
+    if args.env_name == "diner_dash:DinerDash-v0":
+        envs.observation_space.shape = (274,)
 
     actor_critic = Policy(
         envs.observation_space.shape,
@@ -114,9 +136,10 @@ def main():
                               actor_critic.recurrent_hidden_state_size)
 
     # reward agents
-    ltf_reward_fun = LFTReward()
+    # ltf_reward_fun = LFTReward()
 
     obs = envs.reset()
+    obs = convert_one_hot(args.num_processes, obs, device)
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
 
@@ -142,16 +165,10 @@ def main():
                     rollouts.masks[step])
 
             # Obser reward and next obs
-            envs.render()
+            # envs.render()
             obs, reward, done, infos = envs.step(action)
+            obs = convert_one_hot(args.num_processes, obs, device)
 
-            ltf_reward = ltf_reward_fun.reward(obs, j)
-            ltf_reward = np.array(ltf_reward)
-            ltf_reward = ltf_reward.reshape((args.num_processes, -1))
-            ltf_reward = np.mean(ltf_reward, axis=1)
-            ltf_reward = ltf_reward.reshape((args.num_processes, 1))
-            ltf_reward = torch.tensor(ltf_reward).to(device)
-            print("reward:", ltf_reward, "Step:", step, "j:", j)
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])
@@ -163,7 +180,7 @@ def main():
                 [[0.0] if 'bad_transition' in info.keys() else [1.0]
                  for info in infos])
             rollouts.insert(obs, recurrent_hidden_states, action,
-                            action_log_prob, value, ltf_reward, masks, bad_masks)
+                            action_log_prob, value, reward, masks, bad_masks)
 
         with torch.no_grad():
             next_value = actor_critic.get_value(
