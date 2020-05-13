@@ -202,16 +202,16 @@ def main():
                 rollouts.masks[-1]).detach()
 
         if args.gail:
-            # if j >= 10:
-            #     envs.venv.eval()
+            if j >= 10:
+                envs.venv.eval()
 
             gail_epoch = args.gail_epoch
             if j < 10:
                 gail_epoch = 100  # Warm up
             for _ in range(gail_epoch):
-                # discr.update(gail_train_loader, rollouts,
-                #              utils.get_vec_normalize(envs)._obfilt)
-                discr.update(gail_train_loader, rollouts, None)
+                discr.update(gail_train_loader, rollouts,
+                             utils.get_vec_normalize(envs)._obfilt)
+                # discr.update(gail_train_loader, rollouts, None)
 
             for step in range(args.num_steps):
                 rollouts.rewards[step] = discr.predict_reward(
